@@ -1,0 +1,13 @@
+package = boncai
+headers = boncai.h
+compilerOpts = -Ibuild/bonxai/headers/boncai/include
+
+libraryPaths.linux_x64 = build/bonxai/linux-x64
+libraryPaths.linux_arm64 = build/bonxai/linux-arm64
+libraryPaths.mingw_x64 = build/bonxai/windows-x64
+libraryPaths.macos_x64 = build/bonxai/macos-x64
+libraryPaths.macos_arm64 = build/bonxai/macos-arm64
+
+staticLibraries.linux = libboncai_static.a
+staticLibraries.macos = libboncai_static.a
+staticLibraries.mingw = boncai_static.lib
