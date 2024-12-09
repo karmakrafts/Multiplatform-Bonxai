@@ -1,4 +1,4 @@
-package = boncai
+package = io.karma.bonxai
 headers = boncai.h
 compilerOpts = -Ibuild/bonxai/headers/boncai/include
 
