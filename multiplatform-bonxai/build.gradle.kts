@@ -66,6 +66,7 @@ val downloadBonxaiBinariesAndroidX86_64: Download = downloadBonxaiBinariesTask("
 val downloadBonxaiBinariesAndroidArm64V8a: Download = downloadBonxaiBinariesTask("android", "arm64-v8a")
 val downloadBonxaiBinariesIosOs64: Download = downloadBonxaiBinariesTask("ios", "os64")
 val downloadBonxaiBinariesIosSimulator64: Download = downloadBonxaiBinariesTask("ios", "simulator64")
+val downloadBonxaiBinariesIosSimulatorArm64: Download = downloadBonxaiBinariesTask("ios", "simulatorarm64")
 
 fun extractBonxaiBinariesTask(platform: String, arch: String): Copy =
     tasks.create<Copy>("extractBonxaiBinaries${platform.capitalized()}${arch.capitalized()}") {
@@ -88,6 +89,7 @@ val extractBonxaiBinariesAndroidX86_64: Copy = extractBonxaiBinariesTask("androi
 val extractBonxaiBinariesAndroidArm64V8a: Copy = extractBonxaiBinariesTask("android", "arm64-v8a")
 val extractBonxaiBinariesIosOs64: Copy = extractBonxaiBinariesTask("ios", "os64")
 val extractBonxaiBinariesIosSimulator64: Copy = extractBonxaiBinariesTask("ios", "simulator64")
+val extractBonxaiBinariesIosSimulatorArm64: Copy = extractBonxaiBinariesTask("ios", "simulatorarm64")
 
 val extractBonxaiBinaries: Task = tasks.create("extractBonxaiBinaries") {
     group = "bonxaiBinaries"
@@ -100,6 +102,7 @@ val extractBonxaiBinaries: Task = tasks.create("extractBonxaiBinaries") {
     dependsOn(extractBonxaiBinariesAndroidArm64V8a)
     dependsOn(extractBonxaiBinariesIosOs64)
     dependsOn(extractBonxaiBinariesIosSimulator64)
+    dependsOn(extractBonxaiBinariesIosSimulatorArm64)
 }
 
 val downloadBonxaiHeaders: Exec = tasks.create<Exec>("downloadBonxaiHeaders") {
