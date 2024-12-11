@@ -64,6 +64,8 @@ val downloadBonxaiBinariesMacosX64: Download = downloadBonxaiBinariesTask("macos
 val downloadBonxaiBinariesMacosArm64: Download = downloadBonxaiBinariesTask("macos", "arm64")
 val downloadBonxaiBinariesAndroidX86_64: Download = downloadBonxaiBinariesTask("android", "x86_64")
 val downloadBonxaiBinariesAndroidArm64V8a: Download = downloadBonxaiBinariesTask("android", "arm64-v8a")
+val downloadBonxaiBinariesIosOs64: Download = downloadBonxaiBinariesTask("ios", "os64")
+val downloadBonxaiBinariesIosSimulator64: Download = downloadBonxaiBinariesTask("ios", "simulator64")
 
 fun extractBonxaiBinariesTask(platform: String, arch: String): Copy =
     tasks.create<Copy>("extractBonxaiBinaries${platform.capitalized()}${arch.capitalized()}") {
@@ -84,6 +86,8 @@ val extractBonxaiBinariesMacosX64: Copy = extractBonxaiBinariesTask("macos", "x6
 val extractBonxaiBinariesMacosArm64: Copy = extractBonxaiBinariesTask("macos", "arm64")
 val extractBonxaiBinariesAndroidX86_64: Copy = extractBonxaiBinariesTask("android", "x86_64")
 val extractBonxaiBinariesAndroidArm64V8a: Copy = extractBonxaiBinariesTask("android", "arm64-v8a")
+val extractBonxaiBinariesIosOs64: Copy = extractBonxaiBinariesTask("ios", "os64")
+val extractBonxaiBinariesIosSimulator64: Copy = extractBonxaiBinariesTask("ios", "simulator64")
 
 val extractBonxaiBinaries: Task = tasks.create("extractBonxaiBinaries") {
     group = "bonxaiBinaries"
@@ -94,6 +98,8 @@ val extractBonxaiBinaries: Task = tasks.create("extractBonxaiBinaries") {
     dependsOn(extractBonxaiBinariesMacosArm64)
     dependsOn(extractBonxaiBinariesAndroidX86_64)
     dependsOn(extractBonxaiBinariesAndroidArm64V8a)
+    dependsOn(extractBonxaiBinariesIosOs64)
+    dependsOn(extractBonxaiBinariesIosSimulator64)
 }
 
 val downloadBonxaiHeaders: Exec = tasks.create<Exec>("downloadBonxaiHeaders") {
@@ -117,7 +123,8 @@ val updateBonxaiHeaders: Exec = tasks.create<Exec>("updateBonxaiHeaders") {
 
 kotlin {
     listOf(
-        mingwX64(), linuxX64(), linuxArm64(), macosX64(), macosArm64(), androidNativeArm64(), androidNativeX64()
+        mingwX64(), linuxX64(), linuxArm64(), macosX64(), macosArm64(), androidNativeArm64(), androidNativeX64(),
+        iosX64(), iosArm64(), iosSimulatorArm64()
     ).forEach {
         it.compilations.getByName("main") {
             cinterops {
