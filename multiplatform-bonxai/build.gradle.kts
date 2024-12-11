@@ -16,12 +16,11 @@
 
 import de.undercouch.gradle.tasks.download.Download
 import org.gradle.internal.extensions.stdlib.capitalized
-import org.jetbrains.kotlin.gradle.plugin.mpp.DefaultCInteropSettings
 import java.nio.file.Path
+import kotlin.io.path.createDirectories
 import kotlin.io.path.div
 import kotlin.io.path.exists
 import kotlin.io.path.notExists
-import kotlin.io.path.createDirectories
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
@@ -63,6 +62,8 @@ val downloadBonxaiBinariesLinuxX64: Download = downloadBonxaiBinariesTask("linux
 val downloadBonxaiBinariesLinuxArm64: Download = downloadBonxaiBinariesTask("linux", "arm64")
 val downloadBonxaiBinariesMacosX64: Download = downloadBonxaiBinariesTask("macos", "x64")
 val downloadBonxaiBinariesMacosArm64: Download = downloadBonxaiBinariesTask("macos", "arm64")
+val downloadBonxaiBinariesAndroidX86_64: Download = downloadBonxaiBinariesTask("android", "x86_64")
+val downloadBonxaiBinariesAndroidArm64V8a: Download = downloadBonxaiBinariesTask("android", "arm64-v8a")
 
 fun extractBonxaiBinariesTask(platform: String, arch: String): Copy =
     tasks.create<Copy>("extractBonxaiBinaries${platform.capitalized()}${arch.capitalized()}") {
@@ -81,6 +82,8 @@ val extractBonxaiBinariesLinuxX64: Copy = extractBonxaiBinariesTask("linux", "x6
 val extractBonxaiBinariesLinuxArm64: Copy = extractBonxaiBinariesTask("linux", "arm64")
 val extractBonxaiBinariesMacosX64: Copy = extractBonxaiBinariesTask("macos", "x64")
 val extractBonxaiBinariesMacosArm64: Copy = extractBonxaiBinariesTask("macos", "arm64")
+val extractBonxaiBinariesAndroidX86_64: Copy = extractBonxaiBinariesTask("android", "x86_64")
+val extractBonxaiBinariesAndroidArm64V8a: Copy = extractBonxaiBinariesTask("android", "arm64-v8a")
 
 val extractBonxaiBinaries: Task = tasks.create("extractBonxaiBinaries") {
     group = "bonxaiBinaries"
@@ -89,13 +92,18 @@ val extractBonxaiBinaries: Task = tasks.create("extractBonxaiBinaries") {
     dependsOn(extractBonxaiBinariesLinuxArm64)
     dependsOn(extractBonxaiBinariesMacosX64)
     dependsOn(extractBonxaiBinariesMacosArm64)
+    dependsOn(extractBonxaiBinariesAndroidX86_64)
+    dependsOn(extractBonxaiBinariesAndroidArm64V8a)
 }
 
 val downloadBonxaiHeaders: Exec = tasks.create<Exec>("downloadBonxaiHeaders") {
     group = "bonxaiHeaders"
     dependsOn(ensureBuildDirectory)
     workingDir = layout.buildDirectory.get().asFile
-    commandLine("git", "clone", "--branch", libs.versions.bonxai.get(), "--single-branch", "https://github.com/karmakrafts/Bonxai", "bonxai/headers")
+    commandLine(
+        "git", "clone", "--branch", libs.versions.bonxai.get(), "--single-branch",
+        "https://github.com/karmakrafts/Bonxai", "bonxai/headers"
+    )
     onlyIf { (layout.buildDirectory / "bonxai" / "headers").notExists() }
 }
 
@@ -109,11 +117,11 @@ val updateBonxaiHeaders: Exec = tasks.create<Exec>("updateBonxaiHeaders") {
 
 kotlin {
     listOf(
-        mingwX64(), linuxX64(), linuxArm64(), macosX64(), macosArm64()
+        mingwX64(), linuxX64(), linuxArm64(), macosX64(), macosArm64(), androidNativeArm64(), androidNativeX64()
     ).forEach {
         it.compilations.getByName("main") {
             cinterops {
-                val boncai by creating {
+                val bonxai by creating {
                     tasks.getByName(interopProcessingTaskName) {
                         dependsOn(updateBonxaiHeaders)
                         dependsOn(extractBonxaiBinaries)
