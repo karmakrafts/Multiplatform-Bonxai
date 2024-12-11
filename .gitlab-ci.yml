@@ -26,7 +26,7 @@ publish:linux:
       -DpublishDocs.root=/var/www/docs/multiplatform-bonxai
       clean
       publish{KotlinMultiplatform,LinuxX64,LinuxArm64}PublicationToGitlabRepository
-      publishAndroidNative{X64,Arm64}PublicationToGitlabRepository
+      publishAndroidNative{X64,Arm64,Arm32}PublicationToGitlabRepository
       publishDocs
       --no-daemon
       --stacktrace

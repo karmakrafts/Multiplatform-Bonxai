@@ -46,7 +46,7 @@ val ensureBuildDirectory: Task = tasks.create("ensureBuildDirectory") {
 }
 
 fun downloadBonxaiBinariesTask(platform: String, arch: String): Download =
-    tasks.create<Download>("downloadBonxaiBinaries${platform.capitalized()}${arch.capitalized()}") {
+    tasks.create<Download>("downloadBonxaiBinaries${platform.capitalized()}${arch.replace("-", "").capitalized()}") {
         group = "bonxaiBinaries"
         dependsOn(ensureBuildDirectory)
         val fileName = "build-$platform-$arch-debug.zip"
@@ -64,14 +64,15 @@ val downloadBonxaiBinariesMacosX64: Download = downloadBonxaiBinariesTask("macos
 val downloadBonxaiBinariesMacosArm64: Download = downloadBonxaiBinariesTask("macos", "arm64")
 val downloadBonxaiBinariesAndroidX86_64: Download = downloadBonxaiBinariesTask("android", "x86_64")
 val downloadBonxaiBinariesAndroidArm64V8a: Download = downloadBonxaiBinariesTask("android", "arm64-v8a")
+val downloadBonxaiBinariesAndroidArmEabiV7a: Download = downloadBonxaiBinariesTask("android", "armeabi-v7a")
 val downloadBonxaiBinariesIosOs64: Download = downloadBonxaiBinariesTask("ios", "os64")
 val downloadBonxaiBinariesIosSimulator64: Download = downloadBonxaiBinariesTask("ios", "simulator64")
 val downloadBonxaiBinariesIosSimulatorArm64: Download = downloadBonxaiBinariesTask("ios", "simulatorarm64")
 
 fun extractBonxaiBinariesTask(platform: String, arch: String): Copy =
-    tasks.create<Copy>("extractBonxaiBinaries${platform.capitalized()}${arch.capitalized()}") {
+    tasks.create<Copy>("extractBonxaiBinaries${platform.capitalized()}${arch.replace("-", "").capitalized()}") {
         group = "bonxaiBinaries"
-        val downloadTaskName = "downloadBonxaiBinaries${platform.capitalized()}${arch.capitalized()}"
+        val downloadTaskName = "downloadBonxaiBinaries${platform.capitalized()}${arch.replace("-", "").capitalized()}"
         dependsOn(downloadTaskName)
         val platformPair = "$platform-$arch"
         from(zipTree((layout.buildDirectory / "bonxai" / "build-$platformPair-debug.zip").toFile()))
@@ -87,6 +88,7 @@ val extractBonxaiBinariesMacosX64: Copy = extractBonxaiBinariesTask("macos", "x6
 val extractBonxaiBinariesMacosArm64: Copy = extractBonxaiBinariesTask("macos", "arm64")
 val extractBonxaiBinariesAndroidX86_64: Copy = extractBonxaiBinariesTask("android", "x86_64")
 val extractBonxaiBinariesAndroidArm64V8a: Copy = extractBonxaiBinariesTask("android", "arm64-v8a")
+val extractBonxaiBinariesAndroidArmEabiV7a: Copy = extractBonxaiBinariesTask("android", "armeabi-v7a")
 val extractBonxaiBinariesIosOs64: Copy = extractBonxaiBinariesTask("ios", "os64")
 val extractBonxaiBinariesIosSimulator64: Copy = extractBonxaiBinariesTask("ios", "simulator64")
 val extractBonxaiBinariesIosSimulatorArm64: Copy = extractBonxaiBinariesTask("ios", "simulatorarm64")
@@ -100,6 +102,7 @@ val extractBonxaiBinaries: Task = tasks.create("extractBonxaiBinaries") {
     dependsOn(extractBonxaiBinariesMacosArm64)
     dependsOn(extractBonxaiBinariesAndroidX86_64)
     dependsOn(extractBonxaiBinariesAndroidArm64V8a)
+    dependsOn(extractBonxaiBinariesAndroidArmEabiV7a)
     dependsOn(extractBonxaiBinariesIosOs64)
     dependsOn(extractBonxaiBinariesIosSimulator64)
     dependsOn(extractBonxaiBinariesIosSimulatorArm64)
@@ -126,8 +129,8 @@ val updateBonxaiHeaders: Exec = tasks.create<Exec>("updateBonxaiHeaders") {
 
 kotlin {
     listOf(
-        mingwX64(), linuxX64(), linuxArm64(), macosX64(), macosArm64(), androidNativeArm64(), androidNativeX64(),
-        iosX64(), iosArm64(), iosSimulatorArm64()
+        mingwX64(), linuxX64(), linuxArm64(), macosX64(), macosArm64(), androidNativeArm32(), androidNativeArm64(),
+        androidNativeX64(), iosX64(), iosArm64(), iosSimulatorArm64()
     ).forEach {
         it.compilations.getByName("main") {
             cinterops {
