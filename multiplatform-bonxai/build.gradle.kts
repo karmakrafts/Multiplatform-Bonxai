@@ -14,18 +14,13 @@
  * limitations under the License.
  */
 
-import de.undercouch.gradle.tasks.download.Download
 import org.gradle.internal.extensions.stdlib.capitalized
-import java.nio.file.Path
-import kotlin.io.path.createDirectories
-import kotlin.io.path.div
-import kotlin.io.path.exists
-import kotlin.io.path.notExists
+import org.jetbrains.kotlin.konan.target.Family
+import org.jetbrains.kotlin.konan.target.KonanTarget
 
 plugins {
-    alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.dokka)
-    alias(libs.plugins.downloadTask)
+    alias(libs.plugins.kotlin.multiplatform)
     `maven-publish`
 }
 
@@ -37,95 +32,29 @@ java {
     targetCompatibility = JavaVersion.VERSION_17
 }
 
-operator fun DirectoryProperty.div(name: String): Path = get().asFile.toPath() / name
-
-val ensureBuildDirectory: Task = tasks.create("ensureBuildDirectory") {
-    val path = layout.buildDirectory.get().asFile.toPath()
-    doLast { path.createDirectories() }
-    onlyIf { path.notExists() }
-}
-
-fun downloadBonxaiBinariesTask(platform: String, arch: String): Download =
-    tasks.create<Download>("downloadBonxaiBinaries${platform.capitalized()}${arch.replace("-", "").capitalized()}") {
-        group = "bonxaiBinaries"
-        dependsOn(ensureBuildDirectory)
-        val fileName = "build-$platform-$arch-debug.zip"
-        src("https://git.karmakrafts.dev/api/v4/projects/349/packages/generic/build/${libs.versions.bonxai.get()}/$fileName")
-        val destPath = layout.buildDirectory / "bonxai" / fileName
-        dest(destPath.toFile())
-        overwrite(true) // Always overwrite when downloading binaries
-        onlyIf { destPath.notExists() }
+val KonanTarget.familyName: String
+    get() = when (family) {
+        Family.ANDROID -> "android"
+        Family.IOS -> "ios"
+        Family.OSX -> "macos"
+        Family.LINUX -> "linux"
+        Family.MINGW -> "windows"
+        Family.TVOS -> "tvos"
+        Family.WATCHOS -> "watchos"
     }
 
-val downloadBonxaiBinariesWindowsX64: Download = downloadBonxaiBinariesTask("windows", "x64")
-val downloadBonxaiBinariesLinuxX64: Download = downloadBonxaiBinariesTask("linux", "x64")
-val downloadBonxaiBinariesLinuxArm64: Download = downloadBonxaiBinariesTask("linux", "arm64")
-val downloadBonxaiBinariesMacosX64: Download = downloadBonxaiBinariesTask("macos", "x64")
-val downloadBonxaiBinariesMacosArm64: Download = downloadBonxaiBinariesTask("macos", "arm64")
-val downloadBonxaiBinariesAndroidX86_64: Download = downloadBonxaiBinariesTask("android", "x86_64")
-val downloadBonxaiBinariesAndroidArm64V8a: Download = downloadBonxaiBinariesTask("android", "arm64-v8a")
-val downloadBonxaiBinariesAndroidArmEabiV7a: Download = downloadBonxaiBinariesTask("android", "armeabi-v7a")
-val downloadBonxaiBinariesIosOs64: Download = downloadBonxaiBinariesTask("ios", "os64")
-val downloadBonxaiBinariesIosSimulator64: Download = downloadBonxaiBinariesTask("ios", "simulator64")
-val downloadBonxaiBinariesIosSimulatorArm64: Download = downloadBonxaiBinariesTask("ios", "simulatorarm64")
+val KonanTarget.architectureName: String
+    get() = architecture.name.lowercase()
 
-fun extractBonxaiBinariesTask(platform: String, arch: String): Copy =
-    tasks.create<Copy>("extractBonxaiBinaries${platform.capitalized()}${arch.replace("-", "").capitalized()}") {
-        group = "bonxaiBinaries"
-        val downloadTaskName = "downloadBonxaiBinaries${platform.capitalized()}${arch.replace("-", "").capitalized()}"
-        dependsOn(downloadTaskName)
-        val platformPair = "$platform-$arch"
-        from(zipTree((layout.buildDirectory / "bonxai" / "build-$platformPair-debug.zip").toFile()))
-        val destPath = layout.buildDirectory / "bonxai" / platformPair
-        into(destPath.toFile())
-        onlyIf { destPath.notExists() }
-    }
+val binaryPackage: GitLabPackage = gitlab().project(
+    "kk/prebuilts/bonxai"
+).packageRegistry["generic/build", libs.versions.bonxai]
 
-val extractBonxaiBinariesWindowsX64: Copy = extractBonxaiBinariesTask("windows", "x64")
-val extractBonxaiBinariesLinuxX64: Copy = extractBonxaiBinariesTask("linux", "x64")
-val extractBonxaiBinariesLinuxArm64: Copy = extractBonxaiBinariesTask("linux", "arm64")
-val extractBonxaiBinariesMacosX64: Copy = extractBonxaiBinariesTask("macos", "x64")
-val extractBonxaiBinariesMacosArm64: Copy = extractBonxaiBinariesTask("macos", "arm64")
-val extractBonxaiBinariesAndroidX86_64: Copy = extractBonxaiBinariesTask("android", "x86_64")
-val extractBonxaiBinariesAndroidArm64V8a: Copy = extractBonxaiBinariesTask("android", "arm64-v8a")
-val extractBonxaiBinariesAndroidArmEabiV7a: Copy = extractBonxaiBinariesTask("android", "armeabi-v7a")
-val extractBonxaiBinariesIosOs64: Copy = extractBonxaiBinariesTask("ios", "os64")
-val extractBonxaiBinariesIosSimulator64: Copy = extractBonxaiBinariesTask("ios", "simulator64")
-val extractBonxaiBinariesIosSimulatorArm64: Copy = extractBonxaiBinariesTask("ios", "simulatorarm64")
-
-val extractBonxaiBinaries: Task = tasks.create("extractBonxaiBinaries") {
-    group = "bonxaiBinaries"
-    dependsOn(extractBonxaiBinariesWindowsX64)
-    dependsOn(extractBonxaiBinariesLinuxX64)
-    dependsOn(extractBonxaiBinariesLinuxArm64)
-    dependsOn(extractBonxaiBinariesMacosX64)
-    dependsOn(extractBonxaiBinariesMacosArm64)
-    dependsOn(extractBonxaiBinariesAndroidX86_64)
-    dependsOn(extractBonxaiBinariesAndroidArm64V8a)
-    dependsOn(extractBonxaiBinariesAndroidArmEabiV7a)
-    dependsOn(extractBonxaiBinariesIosOs64)
-    dependsOn(extractBonxaiBinariesIosSimulator64)
-    dependsOn(extractBonxaiBinariesIosSimulatorArm64)
-}
-
-val downloadBonxaiHeaders: Exec = tasks.create<Exec>("downloadBonxaiHeaders") {
-    group = "bonxaiHeaders"
-    dependsOn(ensureBuildDirectory)
-    workingDir = layout.buildDirectory.get().asFile
-    commandLine(
-        "git", "clone", "--branch", libs.versions.bonxai.get(), "--single-branch",
-        "https://github.com/karmakrafts/Bonxai", "bonxai/headers"
-    )
-    onlyIf { (layout.buildDirectory / "bonxai" / "headers").notExists() }
-}
-
-val updateBonxaiHeaders: Exec = tasks.create<Exec>("updateBonxaiHeaders") {
-    group = "bonxaiHeaders"
-    dependsOn(downloadBonxaiHeaders)
-    workingDir = (layout.buildDirectory / "bonxai" / "headers").toFile()
-    commandLine("git", "pull", "--force")
-    onlyIf { (layout.buildDirectory / "bonxai" / "headers").exists() }
-}
+val headerRepository: GitRepository = gitRepository(
+    name = "bonxai-headers",
+    address = "https://github.com/karmakrafts/Bonxai",
+    tag = libs.versions.bonxai.get()
+)
 
 kotlin {
     listOf(
@@ -136,8 +65,11 @@ kotlin {
             cinterops {
                 val bonxai by creating {
                     tasks.getByName(interopProcessingTaskName) {
-                        dependsOn(updateBonxaiHeaders)
-                        dependsOn(extractBonxaiBinaries)
+                        dependsOn(headerRepository.pullTask)
+                        val konanTarget = target.konanTarget
+                        val fileName = "build-${konanTarget.familyName}-${konanTarget.architectureName}-debug.zip"
+                        val suffix = "${konanTarget.familyName}${konanTarget.architectureName.capitalized()}"
+                        dependsOn(binaryPackage[fileName, suffix].extractTask)
                     }
                 }
             }
